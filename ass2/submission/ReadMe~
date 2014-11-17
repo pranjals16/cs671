@@ -1,0 +1,18 @@
+1)  Run: $ make
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+Files:
+
+1) Stats.py: Caluclates precison, recall and F-Score
+
+2) filter.py:  Filters out certain special characters
+
+3) lineremove.py: Removes blank lines
+
+4) freqcount.py:  Finds frequency of each distinct word
+
+5) specialremove.py: Removes words with less than 3 characters by ignoring matras
+
+6) mixtesttrain.py:  Merges test and train data in the format suitable for stats.py

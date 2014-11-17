@@ -1,0 +1,10 @@
+1)  Run: $ make
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+Files:
+
+1) Stats.py: Caluclates precison, recall and F-Score
+
+2) mixtesttrain.py:  Merges test and train data in the format suitable for stats.py

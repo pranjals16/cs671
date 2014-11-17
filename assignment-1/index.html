@@ -1,0 +1,79 @@
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>hw1</title>
+<body>
+<font size="6">
+<center><i><b>Assignment-1</b></i><br>
+CS671(NLP)<br></font>
+<font size="6"color="blue"><b>Morphological Structure Discovery</b></font>
+</center>
+<hr>
+<u><b><font size="6" color="red">Results</b></font></u><br><br>
+
+a)  <b>Corpus Pruning Trials and Effects</b><br><br>
+I merged all the three Corpus(Heliohost, data from blogs and data from newspapers) which contained alphanumeric characters and some other non-useful special characters which I pruned using a Python Script. Then I removed words with less than 3 characters(excluding मात्रा) using Python Script again.This pruned set was given as input to another Python Script which counted the frequency of each word. The output was in the format "Frequency Word" which was given as input to <b>UnsupervisedWordSegmentation.cpp</b><br><br>
+<font size="5"><u>Effects:</u><br><br></font>
+1)  Removing less frequent words slightly improved the result as certain NonHindi words were removed and certain other words which created a noise in segmentation results.<br>
+2)  Removing words with lesser number of characters did not have much effect as was expected because they might have led to over segmentation.
+3)  Making PROMOTE_LONG_SEGMENTATION=0 avoided over-segmentation and hence improved the result a lot(roughly, every 2 out of 10-15 words were corrected)
+
+<br><br>    <b>Undivided++ Parameters</b>
+<br><br>
+#define SMALL_ROOT_LENGTH 3<br>
+#define LOW_FREQUENCY_DROPOUTS 1<br>
+#define LOW_FREQUENCY_DROPOUTS_LEARNING 1<br>
+#define SUFFIX_CUTOFF_THRESHOLD 70<br>
+#define PREFIX_CUTOFF_THRESHOLD 50<br>
+#define COMPOSITE_SUFFIX_THRESHOLD 0.65<br>
+#define WRFR_SUFFIX_THRESHOLD 8<br>
+#define WRFR_PREFIX_THRESHOLD 1.5<br>
+#define SLS_NORMALIZATION_CONSTANT 5<br>
+#define ALLOMORPH_REPLACEMENT_THRESHOLD 3<br>
+#define ALLOMORPH_DELETION_THRESHOLD 3<br>
+#define ALLOMORPH_ADDITION_THRESHOLD 3<br>
+#define PROMOTE_LONG_SEGMENTATION 0<br>
+#define PROMOTE_LONG_SEGMENTATION_LENGTH 15<br>
+#define INDUCE_OUTOFVOCABULARY_ROOTS 0<br>
+#define INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD 5<br><br>
+The parameters passed to UnsupervisedWordSegmentation.cpp were:<br>
+<b>./a.out input 1 1 0 1 0<br><br></b>	
+<font size="5"><u>Statistics:</u><br><br></font>
+<font size="5"><center>
+Precision-<b>74.53</b><br>
+Recall-<b>76.54<br></b>
+F-Score-<b>75.52<br><br></font></b></center>
+<font size="5"><u>Discussion on Error Cases:</u><br><br></font>
+<u><b>Unidentified Rules</b></u><br>
+Some words couldn't be correctly segmented because of certain rules of <b>"Sandhi"</b> used in Hindi which inserts certain additional characters in the word. e.g.<br>
+व्युत्पन्न:व्युत्पन्न (wrong) <br>
+व्युत्पन्न:वि+उत्पन्न  (correct)<br>
+"Sandhi" inserts an extra य which was not observed by our code<br><br>
+<u><b>Over-Segmentation</b></u><br>
+The reasons for over segmentation is due to large number of prefixes and suffixes which lead to undesirable segmentation of certain words and due to certain Non-Hindi words present in the corpus.Example:<br><br>
+हाइपरटेंशन:हाइप+र+टेंशन <br>
+विश्‍वविद्यालय:विश्‍व+विद्य+ालय  (wrong) <br>
+विश्‍वविद्यालय:विश्‍व+विद्या+आलय  (correct)<br>
+Here PROMOTE_LONG_SEGMENTATION creates a huge impact on results.
+<br><br><u><b>Under-Segmentation</b></u><br>
+Makin PROMOTE_LONG_SEGMENTATION=0 leads to undersegmentation. Example:<br><br>
+महत्वाकांक्षाओं:महत्वाकांक्षा+ओं (wrong)<br>
+महत्वाकांक्षाओं:महत्व+आकांक्षा+ओं (correct)
+<br><br><br>
+<hr>
+b)  <font size="4"><b>Hand Annotated Test Corpus </b></font><a href="hand_annotated.tar.gz">download</a><br>
+Statistics:<br><b>
+* -> 70<br>
+% -> 16<br>
+Total -> 257</b><br><br>
+* marked words are those which were incorrectly segmented by Undivided++<br>
+% marked words are those which are either wrongly written or are names or are English words written in Hindi<br><br>
+<b><u>Important:</u></b><br>Words are less than 300 because I have removed words with frequency less than 3 and words with number of characters less than 3. Also some words were not there in the corpus(as informed by MS Ram)
+<b>(excluding मात्रा)</b>
+<br><br><br><hr>
+c)  <font size="4"><b>Code  </b></font><a href="">download</a><br><br>
+<hr>
+<u>Submited By:</u><br>
+<b>Pranjal Singh<br>
+10511</b>
+</body>
+</html>

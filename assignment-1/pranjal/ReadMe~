@@ -1,0 +1,24 @@
+1) Copy all the Corpus text files(Heliohost, data from blogs and data from newspapers) into one folder and run:
+	$ cat *txt > finalcorpus.txt
+   This will merge all the data into one files
+
+2)  Run: $ make
+3)  Run: ./a.out filteredcorpus.txt 1 1 0 1 0
+4)  Copy Output/finalSegmentation.txt as pranjalresult.txt
+5)  Run: $ python mixtesttrain.py > pranjal.txt
+6)  Run $ python stats.py
+
+--------------------------------------------------------------------------------------------------------------------------
+
+
+Files:
+
+1) Stats.py: Caluclates precison, recall and F-Score
+
+2) filter.py:  Filters out certain special characters
+
+3) lineremove.py: Removes blank lines
+
+4) freqcount.py:  Finds frequency of each distinct word
+
+5) specialremove.py: Removes words with less than 3 characters by ignoring matras

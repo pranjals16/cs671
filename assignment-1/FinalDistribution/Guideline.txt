@@ -1,0 +1,306 @@
+Directions:
+=================
+
+To compile (in Unix):
+----------------------------
+g++ UnsupervisedWordSegmentation.cpp
+
+To Run:
+-------------------------------
+./a.out wordlist.eng 1 1 0 1 0 
+
+where wordlist.eng contains the vocabulary of a particular language (English in this case),
+and the following five arguments define the algorithmic steps the user wants to run (see below for 
+more description of the steps).
+
+Format of the vocabulary file (e.g., wordlist.eng):
+-----------------------------------------------------
+[freq_of_the_word_in_a_corpus] [word_itself]
+
+The vocabulary file contains the frequency of each word in a corpus.
+Vocabulary file should be ASCII converted (often, people transliterate the vocabulary to English).
+See wordlist.tur, for example, which contains the ASCII converted vocabulary for Turkish.
+
+[Important]
+If a language which has a vocabulary, but doesn't have a corpus to collect frequency distribution, we
+should put any arbitrary value (other than 1 or 0) as the frequency of each word.
+See wordlist2.eng for a vocabulary *without* any frequency distribution. Here we arbitrarily put 
+10 as a frequency of each word in wordlist2.eng.
+
+
+Algorithmic Steps Configuration:
+-----------------------------------------
+There're 5 major Steps in the algorithm:
+1. Induce Prefixes/Suffixes/Roots [essential]
+2. Detecting Incorrect Attachments Using Relative Frequency [optional]
+3. Applying Suffix Level Similarity [optional]
+4. Inducing Orthographic Rules and Allomorphs [optional]
+5. Handle Small Roots. [optional]
+
+We can use the program's arguments to On or Off a particular step (1 to On, 0 to off).
+For example, 
+./a.out wordlist.eng 1 1 0 1 0 
+sets the Step {1, 2, 4} ON and Step {3, 5} OFF.
+
+The first step is essential.
+The remaining 4 steps need to be carefully chosen depending on the language complexity.
+The 2nd step improves the segmentation performance by detecting incorrect suffixal and prefixal attachments.
+Step-3 detects incorrect attachments using suffix level similarity. However, it's often not as significant performance-improver as Step-2. 
+The 4th step is used to learn the character-change rules by a single character replacement, addition and deletion at the segmentation boundary.
+The 5th step is used to handle small roots (e.g., roots of length 3 or less) separately. If we don't employ the 
+5th step, words containing small roots remain unsegmented (e.g., bar+s). 
+
+In the default setting I kept Step 1,2, 4 ON and Step 3 and 5 OFF.
+
+[Important:]
+If vocabulary file doesn't contain the frequncy information (e.g., for a language which 
+has a vocabulary, but doesn't have a corpus to collect each word's frequency in the corpus), we 
+should just run Step-1, as other steps critically depend on the corpus frequencies.
+For example, for wordlist2.eng (which doesn't contain corpus frequencies), run
+./a.out wordlist2.en 1 0 0 0 0
+
+
+
+Parameters to tune:
+--------------------------
+The following parameters need to be changed depending on different language's morphological complexity.
+As mentioned before, we have 5 steps in our system. Each step has its own set of parameters.
+
+Goto UnsupervisedWordSegmentation.cpp and the change the parameter values in the following define statements.
+Don't forget to recompile UnsupervisedWordSegmentation.cpp.
+
+#define SMALL_ROOT_LENGTH 3
+#define LOW_FREQUENCY_DROPOUTS 1
+#define LOW_FREQUENCY_DROPOUTS_LEARNING 5
+#define SUFFIX_CUTOFF_THRESHOLD 50
+#define PREFIX_CUTOFF_THRESHOLD 70
+#define COMPOSITE_SUFFIX_THRESHOLD 0.65
+#define WRFR_SUFFIX_THRESHOLD 10
+#define WRFR_PREFIX_THRESHOLD 1.5
+#define SLS_NORMALIZATION_CONSTANT 7
+#define ALLOMORPH_REPLACEMENT_THRESHOLD 4
+#define ALLOMORPH_DELETION_THRESHOLD 4
+#define ALLOMORPH_ADDITION_THRESHOLD 4
+#define PROMOTE_LONG_SEGMENTATION 1
+#define PROMOTE_LONG_SEGMENTATION_LENGTH 15
+#define INDUCE_OUTOFVOCABULARY_ROOTS 1
+#define INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD 5
+
+
+Output of the System:
+-------------------------------
+1. Output/finalSegmentation.txt
+Final segmentation of each word in the vocabulary file.
+
+2. Ouptut/topSuffixes.txt
+Show the top suffixes the system learns for a particular language.
+
+3. Ouptut/topPrefixes.txt
+Show the top prefixes the system learns for a particular language.
+
+4. Output/freqFile.txt
+Can track how over-segmentation is prevented in Step-2 (i.e., Detecting Incorrect Attachments Using Relative Frequency).
+
+5. Output/weightFile.txt
+Can track how over-segmentation is prevented in Step-3 (i.e., Detecting Incorrect Attachments Using Suffix Level Similarity).
+
+6. Output/rulesFile.txt
+Output of Step-4. Contains the allomorph rules that the system learns 
+i.e., character change rules by a single character replacement, addition and deletion at the segmentation boundary.
+Example of a learned rule:
+"y:i<=> _ +:0 able" -- denotes that character y changes to i at the boundary when the right context is "able".
+Or, "e:0<=> _ +:0 ing" -- denotes that character e is deleted at the boundary when the right context is "ing".
+Or, "0:p<=> _ +:0 ed" -- denotes that character p is added at the boundary when the right context is "ed".
+
+7. Output/rootsFile.txt
+Shows the root morphemes (undivisive meaningful units) that the system learns for a particular language. 
+
+8. Output/outOfVocabularyRoots.txt
+Shows the out of vocabulary root words that the system learns. 
+
+9. Output/testMultipleOutput.txt
+Shows the disambiguation phase when a word exhibiting multiple segmentations is disambiguated.
+A segmentation with higher scoring is selected during the disambiguation. 
+
+10. Output/consoleOut.txt
+Standard commandline is printed in a file.
+Steps of the whole segmentation algorithm can be followed here.
+Also one can check whether the program ends abruptly (due to memory failure or other errors).
+If the program ends successfully you should see "Program Ends Successfully" at the end of consoleOut.txt. 
+
+
+ 
+Description of the Parameters:
+--------------------------------
+The following parameters need to be changed depending on different language's morphological complexity.
+As mentioned before, we have 5 steps in our system. Each step has its own set of parameters.
+
+1. SMALL_ROOT_LENGTH 3
+Length of the smallest root of a particular language.
+Even though many languages have smallest roots of length 2, we recommend keeping it to 3. 
+We don't consider roots of length less than SMALL_ROOT_LENGTH, 
+because smaller length roots are prone to oversegment.
+
+
+2. LOW_FREQUENCY_DROPOUTS 1
+   LOW_FREQUENCY_DROPOUTS_LEARNING 3
+Words with corpus frequency <= LOW_FREQUENCY_DROPOUTS are removed from the vocabulary (and never considered).
+Low frequency words are often spelling mistakes and uninformative. 
+
+Words with corpus frequency <= LOW_FREQUENCY_DROPOUTS_LEARNING are not considered for the *learning* phase.
+The idea is to learn the segmentation rules from high frequency words only, and then apply the rules on both
+high and low frequency words. High frequency words tend to be more reliable, and hence can improve the learning.
+However, low frequency words increase the coverage of the vocabulary. A typical rule of thumb is -- the larger 
+and cleaner the vocabulary, the higher is the quality of the segmentation. Set the LOW_FREQUENCY_DROPOUTS_LEARNING
+according to how clean and reliable low frequency words are. 
+Setting LOW_FREQUENCY_DROPOUTS_LEARNING too high might lower the vocabulary size, 
+and remove important information from the system.
+
+You can keep the above two parameters equal, which suggests that learning and testing occur on the same set.
+In our default setting we kept them equal.
+
+[Important]: 
+When you change LOW_FREQUENCY_DROPOUTS or LOW_FREQUENCY_DROPOUTS_LEARNING, 
+you have to tune the following parameters:
+SUFFIX_CUTOFF_THRESHOLD, PREFIX_CUTOFF_THRESHOLD, ALLOMORPH_REPLACEMENT_THRESHOLD, ALLOMORPH_DELETION_THRESHOLD,
+and ALLOMORPH_ADDITION_THRESHOLD.
+-- as they're crucially dependent on the size of the vocabulary (see below).
+
+
+
+3. SUFFIX_CUTOFF_THRESHOLD 50	//CRITICAL
+   PREFIX_CUTOFF_THRESHOLD 70	//CRITICAL
+
+If the system learns too many prefixes/suffixes, increase the thresholds above to downsize the prefix/suffix list.
+On the other hand, if you want to expand the suffixes/prefixes learned, decrease the corresponding threshold. 
+Typical range for PRE(SUF)FIX_CUTOFF_THRESHOLD: 30-100
+
+Please refer to Output/topSuffixes.txt and Output/topPrefixes.txt to see the top suffixes/prefixes that the system learns.
+You can look at the output of the two .txt files to set the *right* thresholds for the above two parameters.
+
+
+
+4. COMPOSITE_SUFFIX_THRESHOLD 0.65
+This threshold is used to detect whether a suffix is a combination of two smaller suffixes.
+Don't have to change this parameter value often. It turns out to be standard for many languages!
+
+
+5. WRFR_SUFFIX_THRESHOLD 10
+   WRFR_PREFIX_THRESHOLD 1.5
+
+These 2 thresholds are used in Step-2 i.e. Detecting Incorrect Attachments Using Relative Frequency. 
+Tune the thresholds to prevent prefixal/suffixal incorrect attachment i.e., over-segmentations. 
+(e.g., friend=frien+d, or rampant=ramp+ant, or regime=re+gime).  
+
+*Decrease* the threshold gradually to prevent more and more over-segmentation.
+Decreasing the thresholds too heavily might lead to under-segmentation.
+So be careful about these two parameters. For prefixes, the lower the better.
+
+Please refer to Output/freqFile.txt to see how Step-2 detects over-segmentation.
+For each suffix and prefix separately, we show each segmentation and the corresponding
+WRFR ratio ("ratio" in the freqFile.txt).
+The WRFR ratio greater than the threshold is detected as incorrect attachment.
+
+You can look at the output of the freqFile.txt to set the *right* thresholds for WRFR_SUFFIX_THRESHOLD and WRFR_PREFIX_THRESHOLD.
+For example, you can search for "Incorrect Attachments:" for each suffix/prefix to see if they're indeed incorrect 
+attachments, and tune the thresholds accordingly.
+
+Typical Range:
+8-12 -- for WRFR_SUFFIX_THRESHOLD
+1-5  -- for WRFR_PREFIX_THRESHOLD 
+
+
+6. SLS_NORMALIZATION_CONSTANT 5
+This threshold is used in Step-3 i.e. Applying Suffix Level Similarity to detect incorrect attachments.
+Use Step-3 if the second step finds not enough incorrect attachments. 
+But improvements are often not as significant as in Step-2. False positives can be many if the threshold isn't set proper. 
+
+Please refer to Output/weightFile.txt to see how Step-3 detects over-segmentations.
+In the weightFile.txt, we show the incorrect attachments found by Step-3 for each suffix and prefix separately.
+
+You can look at the output of the weightFile.txt to set the *right* threshold for SLS_NORMALIZATION_CONSTANT.
+For example, you can search for "Incorrect Attachment:" for each suffix/prefix to see if they're indeed incorrect. 
+
+Typical Range: 3-10
+
+
+7. ALLOMORPH_REPLACEMENT_THRESHOLD 4
+   ALLOMORPH_DELETION_THRESHOLD 4
+   ALLOMORPH_ADDITION_THRESHOLD 4
+
+The above 3 thresholds are used in Step-4, i.e. during the learning of Orthographic Rules and Allomorphs.
+The lower the threshold, the more character change rules the system learns. But orthographic rules can be noisy, 
+and thus over(/ill)segment.
+Typical Range: 2-8
+
+Please refer to Output/rulesFile.txt to see the list of orthographic rules the system learns.
+
+8. PROMOTE_LONG_SEGMENTATION 1
+   PROMOTE_LONG_SEGMENTATION_LENGTH 15
+
+The above 2 thresholds are used to promote the segmentation of high-length words.
+The higher the length the more likely the words're are going to be segmented. 
+PROMOTE_LONG_SEGMENTATION can be On or Off by setting it to 1 or 0.
+When length(word)>=PROMOTE_LONG_SEGMENTATION_LENGTH the word is forcefully segmented.
+Typical range for PROMOTE_LONG_SEGMENTATION_LENGTH: 12-20
+
+Setting PROMOTE_LONG_SEGMENTATION is particularly fruitful for morphologically complex languages 
+(e.g., Turkish or Finnish) where the words tend to be long and concatenative.
+Check the segmentation output with and without setting the PROMOTE_LONG_SEGMENTATION flag On, and see the differences. 
+
+9. INDUCE_OUTOFVOCABULARY_ROOTS 1
+   INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD 5
+
+The above two thresholds are used to induce roots that aren't present in the vocabulary.
+This is particularly fruitful for many languages e.g., Finnish, Turkish, German where roots often don't appear in
+the vocabulary individually. One of the necessary constraints in our basic segmentation model is that root 
+(or their allomorphic variants) must appear in the vocabulary, but this might lead to severe undersegmentation
+for agglutinative languages where roots often don't appear in the vocabulary. To remove the deficiency, 
+we extend our system by inducing new roots using their likelihood to attach to the affixes that're induced already. 
+This feature can be turned on and off by setting INDUCE_OUTOFVOCABULARY_ROOTS to 1 and 0 respectively. 
+In the default setting we turned it off. 
+
+INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD should be set according to the demand of the new roots for a particular language.
+To induce more roots lower the INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD, and to induce less roots increase the INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD. 
+The file outOfVocabularyRoots.txt contains the list of out-of-vocabulary roots that the system learned.
+
+Typical range for INDUCE_OUTOFVOCABULARY_ROOTS_THRESHOLD: 3-7
+
+
+
+
+Errors and Others:
+==================================
+Check Output/consoleOut.txt to track error messages and others.
+If the program ends successfully you should see "Program Ends Successfully" at the end of consoleOut.txt. 
+
+
+
+Memory Failures:
+==================================
+Memory failures can occur due to two reasons: (1) Lack of memory in your system (e.g., low RAM), 
+or (2) Large vocabulary size pertaining to a language. 
+
+Change the following two values in the UnsupervisedWordSegmentation.cpp to circumvent memory failures.
+
+#define MEMORY_MAX_VOCABULARY_SIZE 500000
+#define MEMORY_AFFIX_ROOT_RATIO 10000
+
+MEMORY_MAX_VOCABULARY_SIZE is the maximum number of words in a vocabulary we should hold into memory.
+MEMORY_AFFIX_ROOT_RATIO is the maximum number of roots each affix can attach to.
+
+For case 1: Lack of memory in your system (e.g., low RAM), --- *lower* the above two parameters.
+
+For case 2: Large vocabulary in a language, --- *increase* the above two parameters. But increase them only enough so that
+it fits into system memory. Another way to handle large vocabulary is to increase the LOW_FREQUENCY_DROPOUTS to decrease the vocabulary size.
+ 
+
+ 
+References:
+=================
+Please cite the following paper for any reference to the software:
+
+High-Performance, Language-Independent Morphological Segmentation. 
+Sajib Dasgupta and Vincent Ng. 
+In the annual conference of the NAACL-HLT, New York, 2007. 
+
